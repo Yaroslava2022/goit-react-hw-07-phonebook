@@ -1,32 +1,63 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { v4 as uuidv4 } from "uuid";
+import { fetchContacts, addContact, deleteContact } from './operations';
+// import { v4 as uuidv4 } from "uuid";
 
-const initialState = [
-    { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-    { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-    { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-    { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-  ];
+const initialState = {  
+  items: [],
+  isLoading: false,
+  error: null,
+}
 
-const contactSlice = createSlice({
-	name: 'contacts',
-	initialState,
-	reducers: {
-		addContacts: (state, { payload }) => {
-            const { name, number } = payload;
-            const id=uuidv4();
-            const contact = { id, name, number };
-        state.push(contact);
-          
-          },
 
-		deleteContacts: (state, { payload })  =>
-        state.filter(({ id }) => id !== payload),
-    
-		
-	},
-})
+const handlePending = state => {
+  state.isLoading = true
+  
+}
 
-export const contactReducer = contactSlice.reducer
+const handleRejected = (state, {payload}) => {
+  
+    state.isLoading = false
+    state.error = payload
+  }
 
-export const { addContacts, deleteContacts } = contactSlice.actions
+
+const handleFetchContactsSuccess = (state, {payload}) => {
+  
+    state.isLoading =false
+    state.error= null
+    state.items = payload 
+};
+
+const handleAddContactSuccess = (state, {payload}) => {
+
+    state.isLoading = false
+    state.error= null
+    state.items= [payload, ...state.items]
+  }
+
+
+const handleDeleteContactSuccess = (state, {payload}) => {
+  
+    state.isLoading =false
+    state.error = null
+    state.items = state.items.filter(item => item.id !== payload.id)
+  
+}
+
+const contactsSlice = createSlice({
+  name: 'contacts',
+  initialState,
+  extraReducers: {
+    [fetchContacts.pending]: handlePending,
+    [fetchContacts.rejected]: handleRejected,
+    [fetchContacts.fulfilled]: handleFetchContactsSuccess,
+    [addContact.pending]: handlePending,
+    [addContact.rejected]: handleRejected,
+    [addContact.fulfilled]: handleAddContactSuccess,
+    [deleteContact.pending]: handlePending,
+    [deleteContact.rejected]: handleRejected,
+    [deleteContact.fulfilled]: handleDeleteContactSuccess,
+  },
+});
+
+export const contactsReducer = contactsSlice.reducer;
